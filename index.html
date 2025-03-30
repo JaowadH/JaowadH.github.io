@@ -254,7 +254,7 @@
             <div class="contact-form">
               <h2 class="mb-4">Interested to work together? Let's talk</h2>
 
-              <form action="" method="get">
+              <form action="send_email.php" method="post">
                 <div class="row">
                   <div class="col-lg-6 col-12">
                     <input type="text" class="form-control" name="name" placeholder="Your Name" id="name">
@@ -301,6 +301,12 @@
     <script src="js/owl.carousel.min.js"></script>
     <script src="js/smoothscroll.js"></script>
     <script src="js/custom.js"></script>
+    <script>
+      if (window.location.search.includes("sent=true")) {
+        alert("Thank you! Your message has been sent successfully.");
+      }
+    </script>
+    
 
   </body>
 </html>
