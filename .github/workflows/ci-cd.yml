@@ -1,0 +1,84 @@
+name: Portfolio CI/CD
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+    branches:
+      - main # Trigger on PRs targeting the main branch
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x] # Test on multiple Node versions
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm' # Cache npm dependencies
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Compile Sass
+        run: npm run build:sass # This runs the script from your package.json
+
+      - name: Verify build output
+        run: |
+          ls -l css/ # List CSS directory to ensure compiled file exists
+          # IMPORTANT: Ensure 'css/compiled-style.css' is the actual output path and filename
+          # defined in your 'npm run build:sass' script in package.json
+          if [ ! -f css/compiled-style.css ]; then
+            echo "CSS file 'css/compiled-style.css' not found after build!"
+            exit 1
+          fi
+          echo "Build check successful."
+
+  deploy:
+    name: Deploy to Hostinger
+    runs-on: ubuntu-latest
+    needs: build # Only run deploy if the 'build' job succeeds
+    # Only deploy on a direct push (merge) to the main branch
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x' # Use a specific Node version for deployment consistency
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install # Installs dependencies from root package.json
+
+      - name: Build project (e.g., Sass compilation)
+        run: npm run build # Runs the 'build' script from root package.json
+                           # This should include 'build:sass'
+
+      - name: FTP Deploy to Hostinger
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./ # Deploy the entire repository root after build.
+                        # If your 'npm run build' outputs everything to a 'dist'
+                        # or 'public' folder, change this to './dist/' or './public/'.
+                        # Given your project structure, './' is likely correct if
+                        # compiled CSS goes into the existing 'css' folder.
+          remote-dir: ${{ secrets.FTP_REMOTE_DIR }} # e.g., /public_html/
+          # port: 21 # Uncomment and change if your Hostinger FTP uses a different port
+          # dangerous-clean-slate: false # Set to true ONLY if you want to wipe the remote-dir before uploading.
