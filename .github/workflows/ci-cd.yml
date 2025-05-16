@@ -31,18 +31,21 @@ jobs:
         run: npm install
 
       - name: Compile Sass
-        run: npm run build:sass # This runs the script from your package.json
+        # This script is defined in your root package.json
+        # Example: sass sass/tooplate-style.scss css/tooplate-style.css --style=compressed
+        run: npm run build:sass 
 
       - name: Verify build output
         run: |
-          ls -l css/ # List CSS directory to ensure compiled file exists
-          # IMPORTANT: Ensure 'css/compiled-style.css' is the actual output path and filename
-          # defined in your 'npm run build:sass' script in package.json
-          if [ ! -f css/compiled-style.css ]; then
-            echo "CSS file 'css/compiled-style.css' not found after build!"
+          echo "Listing contents of css directory:"
+          ls -l css/
+          echo "Checking for css/tooplate-style.css..."
+          # Ensure 'css/tooplate-style.css' matches the output of your 'build:sass' script
+          if [ ! -f css/tooplate-style.css ]; then
+            echo "ERROR: Compiled CSS file 'css/tooplate-style.css' not found after build!"
             exit 1
           fi
-          echo "Build check successful."
+          echo "Build check successful: css/tooplate-style.css found."
 
   deploy:
     name: Deploy to Hostinger
@@ -62,23 +65,35 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm install # Installs dependencies from root package.json
+        # Installs dependencies from root package.json (e.g., sass compiler)
+        run: npm install 
 
       - name: Build project (e.g., Sass compilation)
-        run: npm run build # Runs the 'build' script from root package.json
-                           # This should include 'build:sass'
+        # Runs the 'build' script from root package.json, which should include 'build:sass'
+        run: npm run build 
 
       - name: FTP Deploy to Hostinger
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        # The 'with:' block contains inputs for the action.
+        # All keys under 'with:' (server, username, password, local-dir, remote-dir)
+        # MUST have the exact same indentation level (e.g., 2 spaces more than 'with:').
         with:
+          # FTP Server address from GitHub Secrets
           server: ${{ secrets.FTP_SERVER }}
+          # FTP Username from GitHub Secrets
           username: ${{ secrets.FTP_USERNAME }}
+          # FTP Password from GitHub Secrets
           password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./ # Deploy the entire repository root after build.
-                        # If your 'npm run build' outputs everything to a 'dist'
-                        # or 'public' folder, change this to './dist/' or './public/'.
-                        # Given your project structure, './' is likely correct if
-                        # compiled CSS goes into the existing 'css' folder.
-          remote-dir: ${{ secrets.FTP_REMOTE_DIR }} # e.g., /public_html/
-          # port: 21 # Uncomment and change if your Hostinger FTP uses a different port
-          # dangerous-clean-slate: false # Set to true ONLY if you want to wipe the remote-dir before uploading.
+          # Local directory to upload from.
+          # './' means the root of your repository after the build step.
+          # If your build outputs to a 'dist' folder, change this to './dist/'.
+          local-dir: ./ 
+          # Remote directory on the FTP server to upload files to.
+          # THIS LINE IS CRITICAL FOR INDENTATION.
+          # It must be aligned precisely with 'server:', 'username:', 'password:', and 'local-dir:'.
+          # Example value for FTP_REMOTE_DIR secret: public_html
+          server-dir: ${{ secrets.FTP_REMOTE_DIR }}
+          # port: 21 
+          # ^ Uncomment and change if your FTP server uses a different port.
+          # dangerous-clean-slate: false 
+          # ^ Set to true ONLY if you want to wipe the remote-dir before uploading. Use with extreme caution.
