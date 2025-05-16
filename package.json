@@ -1,0 +1,30 @@
+{
+  "name": "jaowadh.github.io",
+  "version": "1.0.0",
+  "description": "Jaowad Hossain's Portfolio Website",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build:sass": "sass sass/tooplate-style.scss css/tooplate-style.css --style=compressed",
+    "build": "npm run build:sass"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JaowadH/JaowadH.github.io.git"
+  },
+  "keywords": [
+    "portfolio",
+    "web developer",
+    "software developer"
+  ],
+  "author": "Jaowad Hossain",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/JaowadH/JaowadH.github.io/issues"
+  },
+  "homepage": "https://github.com/JaowadH/JaowadH.github.io#readme",
+  "devDependencies": {
+    "sass": "^1.89.0"
+  }
+}
